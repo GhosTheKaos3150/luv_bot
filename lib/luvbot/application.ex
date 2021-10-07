@@ -9,7 +9,7 @@ defmodule Luvbot.Application do
   def start(_type, _args) do
     children = [
       # Starts a worker by calling: Luvbot.Worker.start_link(arg)
-      # {Luvbot.Worker, arg}
+      Luvbot.Consumer
     ]
 
     # See https://hexdocs.pm/elixir/Supervisor.html
