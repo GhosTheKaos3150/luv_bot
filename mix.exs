@@ -27,7 +27,8 @@ defmodule Luvbot.MixProject do
       {:httpoison, "~> 1.8"},
       {:nostrum, "~> 0.4"},
       {:json, "~> 1.4"},
-      {:poison, "~> 3.0"}
+      {:poison, "~> 3.0"},
+      {:oauther, "~> 1.1"}
     ]
   end
 end
