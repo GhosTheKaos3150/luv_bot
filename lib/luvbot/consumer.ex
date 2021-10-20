@@ -15,6 +15,41 @@ defmodule Luvbot.Consumer do
         Api.start_typing(msg.channel_id)
         Api.create_message(msg.channel_id, "#{Enum.at(aux, 1)}")
 
+      String.starts_with?(msg.content, "!noisebg") ->
+        aux = String.split(msg.content, " ", parts: 2)
+        noisefy(Enum.at(aux, 1), msg)
+
+      String.starts_with?(msg.content, "!monsterize") ->
+        avatar_random(msg)
+
+      String.starts_with?(msg.content, "!demonsterize") ->
+        avatar_normal(msg)
+
+      String.starts_with?(msg.content, "!lucky") ->
+        aux = String.split(msg.content, " ", parts: 2)
+
+        if Enum.count(aux) > 1 do
+          ball8(msg)
+        else
+          Api.start_typing(msg.channel_id)
+
+          Api.create_message(
+            msg.channel_id,
+            "If you don't ask, I'll not answer :smirk:"
+          )
+        end
+
+      String.starts_with?(msg.content, "!trivia") ->
+        trivia(msg)
+
+      String.starts_with?(msg.content, "!qrcode") ->
+        qrcodefy(msg)
+
+      String.starts_with?(msg.content, "!") ->
+        # Erro ao reconhecer comando
+        Api.start_typing(msg.channel_id)
+        Api.create_message(msg.channel_id, "Sorry, I didin't found this command! :sob:")
+
       # String.starts_with?(msg.content, "!math") ->
       #   aux = String.split(msg.content, " ", parts: 3)
 
@@ -41,29 +76,6 @@ defmodule Luvbot.Consumer do
       #     Api.create_message(msg.channel_id, "I need 3 arguments, the operation and the expression, no more, nor less")
       #   end
 
-      String.starts_with?(msg.content, "!noisebg") ->
-        aux = String.split(msg.content, " ", parts: 2)
-        noisefy(Enum.at(aux, 1), msg)
-
-      String.starts_with?(msg.content, "!monsterize") ->
-        avatar_random(msg)
-
-      String.starts_with?(msg.content, "!demonsterize") ->
-        avatar_normal(msg)
-
-      String.starts_with?(msg.content, "!lucky") ->
-        aux = String.split(msg.content, " ", parts: 2)
-
-        if Enum.count(aux) > 1 do
-          ball8(msg)
-        else
-          Api.start_typing(msg.channel_id)
-          Api.create_message(
-            msg.channel_id,
-            "If you don't ask, I'll not answer :smirk:"
-          )
-        end
-
       # String.starts_with?(msg.content, "!twitter") ->
       #   aux = String.split(msg.content, " ", parts: 2)
 
@@ -76,17 +88,6 @@ defmodule Luvbot.Consumer do
       #       "This will not work! Try \"!twitter -follow <username>\" or \"!twitter -unfollow <username>\" instead!"
       #     )
       #   end
-
-      String.starts_with?(msg.content, "!trivia") ->
-        trivia(msg)
-
-      String.starts_with?(msg.content, "!qrcode") ->
-        qrcodefy(msg)
-
-      String.starts_with?(msg.content, "!") ->
-        # Erro ao reconhecer comando
-        Api.start_typing(msg.channel_id)
-        Api.create_message(msg.channel_id, "Sorry, I didin't found this command! :sob:")
 
       # Todo o resto que não for comando
       true ->
@@ -206,12 +207,50 @@ defmodule Luvbot.Consumer do
           file: "temp/qrcode.png"
         )
 
+      "-decode" ->
+        file_url = Enum.at(msg.attachments, 0).url
+
+        if file_url == nil do
+          Api.start_typing(msg.channel_id)
+
+          Api.create_message(
+            msg.channel_id,
+            "There's no attachments! :D"
+          )
+        else
+          {:ok, res} =
+            HTTPoison.get("http://api.qrserver.com/v1/read-qr-code/?fileurl=#{file_url}")
+
+          body = Poison.decode!(res.body)
+
+          Enum.each(
+            body,
+            fn b ->
+              content = b["symbol"]
+
+              Enum.each(
+                content,
+                fn symbol ->
+                  data = symbol["data"]
+
+                  Api.start_typing(msg.channel_id)
+
+                  Api.create_message(
+                    msg.channel_id,
+                    "Your QRCode content: \"#{data}\""
+                  )
+                end
+              )
+            end
+          )
+        end
+
       _ ->
         Api.start_typing(msg.channel_id)
 
         Api.create_message(
           msg.channel_id,
-          "QRCode Command specification not implemmented!"
+          "Your qrcode specs are strange! :("
         )
     end
   end
@@ -532,5 +571,4 @@ defmodule Luvbot.Consumer do
   #     e in RuntimeError -> e
   #   end
   # end
-
 end
